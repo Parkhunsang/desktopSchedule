@@ -1,0 +1,486 @@
+let events = []; // Array of { id, title, date (YYYY-MM-DD), time (HH:MM), color, desc }
+let currentDate = new Date(); // Today's date
+let selectedDate = new Date(); // Currently clicked date
+let currentViewMonth = currentDate.getMonth(); // Month currently viewed (0-11)
+let currentViewYear = currentDate.getFullYear(); // Year currently viewed
+
+export function initCalendar() {
+  loadEvents();
+
+  // Navigation Buttons
+  const prevBtn = document.getElementById("prev-month-btn");
+  const nextBtn = document.getElementById("next-month-btn");
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener("click", () => changeMonth(-1));
+    nextBtn.addEventListener("click", () => changeMonth(1));
+  }
+
+  // Modal Buttons
+  const addEventBtn = document.getElementById("add-event-btn");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const eventForm = document.getElementById("event-form");
+  const deleteEventBtn = document.getElementById("delete-event-btn");
+  
+  if (addEventBtn) {
+    addEventBtn.addEventListener("click", () => openEventModal());
+  }
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", closeEventModal);
+  }
+  if (eventForm) {
+    eventForm.addEventListener("submit", saveEvent);
+  }
+  if (deleteEventBtn) {
+    deleteEventBtn.addEventListener("click", () => {
+      const id = document.getElementById("event-id").value;
+      if (id) {
+        deleteEvent(id);
+      }
+    });
+  }
+
+  // Close modal on overlay click
+  const modal = document.getElementById("event-modal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeEventModal();
+    });
+  }
+
+  // Clear error warning on input changes
+  const titleInput = document.getElementById("event-title");
+  const timeInput = document.getElementById("event-time");
+  const endTimeInput = document.getElementById("event-end-time");
+  [titleInput, timeInput, endTimeInput].forEach(input => {
+    if (input) {
+      input.addEventListener("input", hideEventModalError);
+    }
+  });
+
+  // Initial Render
+  renderCalendar();
+  renderAgenda();
+}
+
+function loadEvents() {
+  const saved = localStorage.getItem("desktop_scheduler_events");
+  if (saved) {
+    try {
+      events = JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to load events", e);
+      events = [];
+    }
+  } else {
+    // Generate placeholder sample events
+    const todayStr = formatDateString(new Date());
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateString(tomorrow);
+
+    events = [
+      {
+        id: "sample-1",
+        title: "데스크탑 스케줄러 개발 시작",
+        date: todayStr,
+        time: "14:00",
+        endTime: "15:30",
+        color: "#3b82f6",
+        desc: "Vite + Vanilla JS로 멋진 투명 글래스 디자인 완성하기"
+      },
+      {
+        id: "sample-2",
+        title: "일일 스프린트 미팅",
+        date: todayStr,
+        time: "16:30",
+        endTime: "17:00",
+        color: "#f59e0b",
+        desc: "진행상황 요약 및 주간 플랜 조율"
+      },
+      {
+        id: "sample-3",
+        title: "운동 및 건강 관리",
+        date: tomorrowStr,
+        time: "09:00",
+        endTime: "10:30",
+        color: "#10b981",
+        desc: "헬스장 1시간 유산소 및 코어 트레이닝"
+      }
+    ];
+    saveEventsToStorage();
+  }
+}
+
+function saveEventsToStorage() {
+  localStorage.setItem("desktop_scheduler_events", JSON.stringify(events));
+}
+
+function changeMonth(direction) {
+  currentViewMonth += direction;
+  if (currentViewMonth < 0) {
+    currentViewMonth = 11;
+    currentViewYear--;
+  } else if (currentViewMonth > 11) {
+    currentViewMonth = 0;
+    currentViewYear++;
+  }
+  renderCalendar();
+}
+
+// Render Calendar Grid cells
+function renderCalendar() {
+  const monthTitle = document.getElementById("current-month-year");
+  const calendarGrid = document.getElementById("calendar-grid");
+  
+  if (!monthTitle || !calendarGrid) return;
+
+  // Set header text: "2026.06"
+  const displayMonth = String(currentViewMonth + 1).padStart(2, '0');
+  monthTitle.textContent = `${currentViewYear}.${displayMonth}`;
+
+  // Clear previous cells
+  calendarGrid.innerHTML = "";
+
+  // Get first day of the month (0 = Sun, 6 = Sat)
+  const firstDayIndex = new Date(currentViewYear, currentViewMonth, 1).getDay();
+  
+  // Get last day of the current month
+  const lastDayDate = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+  
+  // Get last day of the previous month
+  const prevLastDayDate = new Date(currentViewYear, currentViewMonth, 0).getDate();
+
+  // 1. Render Previous Month's trailing days
+  for (let i = firstDayIndex; i > 0; i--) {
+    const dayNum = prevLastDayDate - i + 1;
+    const cellDate = new Date(currentViewYear, currentViewMonth - 1, dayNum);
+    const cell = createDayCell(dayNum, cellDate, true);
+    calendarGrid.appendChild(cell);
+  }
+
+  // 2. Render Current Month's days
+  for (let i = 1; i <= lastDayDate; i++) {
+    const cellDate = new Date(currentViewYear, currentViewMonth, i);
+    const cell = createDayCell(i, cellDate, false);
+    calendarGrid.appendChild(cell);
+  }
+
+  // 3. Render Next Month's leading days to fill grid (usually 42 cells total)
+  const totalCellsRendered = firstDayIndex + lastDayDate;
+  const remainingCells = 42 - totalCellsRendered;
+  
+  for (let i = 1; i <= remainingCells; i++) {
+    const cellDate = new Date(currentViewYear, currentViewMonth + 1, i);
+    const cell = createDayCell(i, cellDate, true);
+    calendarGrid.appendChild(cell);
+  }
+}
+
+// Create individual cell DOM node
+function createDayCell(dayNumber, cellDate, isOtherMonth) {
+  const cell = document.createElement("div");
+  cell.className = "calendar-cell";
+  cell.textContent = dayNumber;
+
+  const dateStr = formatDateString(cellDate);
+  cell.dataset.date = dateStr;
+
+  if (isOtherMonth) {
+    cell.classList.add("other-month");
+  }
+
+  // Check if cell is Today
+  const todayStr = formatDateString(currentDate);
+  if (dateStr === todayStr) {
+    cell.classList.add("today");
+  }
+
+  // Check if cell is Selected
+  const selectedStr = formatDateString(selectedDate);
+  if (dateStr === selectedStr) {
+    cell.classList.add("selected");
+  }
+
+  // Check for events on this day and add dots
+  const dayEvents = events.filter(e => e.date === dateStr);
+  if (dayEvents.length > 0) {
+    const dotsContainer = document.createElement("div");
+    dotsContainer.className = "calendar-dots";
+    
+    // Draw up to 3 dots
+    dayEvents.slice(0, 3).forEach(ev => {
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.backgroundColor = ev.color;
+      dotsContainer.appendChild(dot);
+    });
+    cell.appendChild(dotsContainer);
+
+    // Create Tooltip for hovered calendar cell
+    const tooltip = document.createElement("div");
+    tooltip.className = "calendar-tooltip";
+    
+    // Sort events by time and format list
+    const sortedEvents = [...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
+    const listContainer = document.createElement("ul");
+    listContainer.className = "tooltip-event-list";
+    
+    sortedEvents.forEach(ev => {
+      const li = document.createElement("li");
+      
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "tooltip-event-time";
+      timeSpan.textContent = ev.time;
+      timeSpan.style.color = ev.color; // Match dot color
+      
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "tooltip-event-title";
+      titleSpan.textContent = ev.title;
+      
+      li.appendChild(timeSpan);
+      li.appendChild(titleSpan);
+      listContainer.appendChild(li);
+    });
+    
+    tooltip.appendChild(listContainer);
+    cell.appendChild(tooltip);
+  }
+
+  // Cell click event
+  cell.addEventListener("click", () => {
+    // Update selected date state
+    selectedDate = cellDate;
+    
+    // Rerender cells to update selection highlight
+    document.querySelectorAll(".calendar-cell").forEach(c => c.classList.remove("selected"));
+    cell.classList.add("selected");
+    
+    // Update Agenda
+    renderAgenda();
+  });
+
+  return cell;
+}
+
+// Render agenda items for selected date
+function renderAgenda() {
+  const agendaList = document.getElementById("agenda-list");
+  const dateLabel = document.getElementById("agenda-date-label");
+
+  if (!agendaList || !dateLabel) return;
+
+  const selectedStr = formatDateString(selectedDate);
+  const todayStr = formatDateString(currentDate);
+
+  // Set Title Label
+  if (selectedStr === todayStr) {
+    dateLabel.textContent = "오늘";
+  } else {
+    const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const d = String(selectedDate.getDate()).padStart(2, '0');
+    dateLabel.textContent = `${m}월 ${d}일`;
+  }
+
+  // Clear previous items
+  agendaList.innerHTML = "";
+
+  // Filter and sort events for this day (by time)
+  const dayEvents = events
+    .filter(e => e.date === selectedStr)
+    .sort((a, b) => a.time.localeCompare(b.time));
+
+  if (dayEvents.length === 0) {
+    agendaList.innerHTML = `
+      <div class="agenda-empty">
+        <i data-lucide="calendar"></i>
+        <span>이 날에는 등록된 일정이 없습니다.</span>
+      </div>
+    `;
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+    return;
+  }
+
+  // Render events
+  dayEvents.forEach(ev => {
+    const item = document.createElement("div");
+    item.className = "agenda-item";
+    item.style.borderLeftColor = ev.color;
+
+    const displayTimeRange = ev.endTime ? `${ev.time} ~ ${ev.endTime}` : ev.time;
+
+    item.innerHTML = `
+      <div class="agenda-item-time">${displayTimeRange}</div>
+      <div class="agenda-item-details">
+        <div class="agenda-item-title">${escapeHTML(ev.title)}</div>
+        ${ev.desc ? `<div class="agenda-item-desc">${escapeHTML(ev.desc)}</div>` : ""}
+      </div>
+    `;
+
+    item.addEventListener("click", () => {
+      openEventModal(ev);
+    });
+
+    agendaList.appendChild(item);
+  });
+}
+
+// Open Event Modal (supports both Add and Edit modes)
+function openEventModal(eventToEdit = null) {
+  const modal = document.getElementById("event-modal");
+  const modalTitle = document.getElementById("modal-title-text");
+  
+  const idInput = document.getElementById("event-id");
+  const dateInput = document.getElementById("event-date");
+  const titleInput = document.getElementById("event-title");
+  const timeInput = document.getElementById("event-time");
+  const endTimeInput = document.getElementById("event-end-time");
+  const colorSelect = document.getElementById("event-color");
+  const descInput = document.getElementById("event-desc");
+  const deleteBtn = document.getElementById("delete-event-btn");
+
+  if (!modal || !idInput || !dateInput || !titleInput || !timeInput || !endTimeInput || !colorSelect || !descInput || !deleteBtn) return;
+
+  if (eventToEdit) {
+    // Edit mode
+    modalTitle.textContent = "일정 수정";
+    idInput.value = eventToEdit.id;
+    dateInput.value = eventToEdit.date;
+    titleInput.value = eventToEdit.title;
+    timeInput.value = eventToEdit.time;
+    endTimeInput.value = eventToEdit.endTime || "";
+    colorSelect.value = eventToEdit.color;
+    descInput.value = eventToEdit.desc || "";
+    deleteBtn.classList.remove("hidden");
+  } else {
+    // Add mode
+    modalTitle.textContent = "일정 추가";
+    idInput.value = "";
+    dateInput.value = formatDateString(selectedDate);
+    titleInput.value = "";
+    
+    // Default time is closest hour, end time is 1 hour later
+    const now = new Date();
+    const currentHour = now.getHours();
+    const endHour = (currentHour + 1) % 24;
+    
+    const startHourStr = String(currentHour).padStart(2, '0');
+    const endHourStr = String(endHour).padStart(2, '0');
+    
+    timeInput.value = `${startHourStr}:00`;
+    endTimeInput.value = `${endHourStr}:00`;
+    
+    colorSelect.selectedIndex = 0;
+    descInput.value = "";
+    deleteBtn.classList.add("hidden");
+  }
+
+  hideEventModalError();
+  modal.classList.remove("hidden");
+  titleInput.focus();
+}
+
+function closeEventModal() {
+  const modal = document.getElementById("event-modal");
+  if (modal) modal.classList.add("hidden");
+  
+  hideEventModalError();
+  
+  const descInput = document.getElementById("event-desc");
+  if (descInput) {
+    descInput.style.width = "";
+    descInput.style.height = "";
+  }
+  
+  window.dispatchEvent(new Event('resize'));
+}
+
+// Submit handler to Save / Edit event
+function saveEvent(e) {
+  e.preventDefault();
+
+  const id = document.getElementById("event-id").value;
+  const date = document.getElementById("event-date").value;
+  const title = document.getElementById("event-title").value.trim();
+  const time = document.getElementById("event-time").value;
+  const endTime = document.getElementById("event-end-time").value;
+  const color = document.getElementById("event-color").value;
+  const desc = document.getElementById("event-desc").value.trim();
+
+  if (!title) return;
+
+  // Validation: End time check removed to allow overnight schedules (e.g. 23:00 ~ 02:00) on the same date.
+
+
+  if (id) {
+    // Update existing event
+    events = events.map(ev => {
+      if (ev.id === id) {
+        return { id, title, date, time, endTime, color, desc };
+      }
+      return ev;
+    });
+  } else {
+    // Create new event
+    const newEvent = {
+      id: "event-" + Date.now(),
+      title,
+      date,
+      time,
+      endTime,
+      color,
+      desc
+    };
+    events.push(newEvent);
+  }
+
+  saveEventsToStorage();
+  closeEventModal();
+  renderCalendar();
+  renderAgenda();
+}
+
+function deleteEvent(id) {
+  events = events.filter(ev => ev.id !== id);
+  saveEventsToStorage();
+  closeEventModal();
+  renderCalendar();
+  renderAgenda();
+}
+
+// Helpers
+function formatDateString(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function showEventModalError(message) {
+  const errorEl = document.getElementById("event-modal-error");
+  const errorTextEl = document.getElementById("event-modal-error-text");
+  if (errorEl && errorTextEl) {
+    errorTextEl.textContent = message;
+    errorEl.classList.remove("hidden");
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
+}
+
+function hideEventModalError() {
+  const errorEl = document.getElementById("event-modal-error");
+  if (errorEl) {
+    errorEl.classList.add("hidden");
+  }
+}
