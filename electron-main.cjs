@@ -95,6 +95,9 @@ function createWindow() {
     }
   });
 
+  // Open DevTools for debugging sync issues
+  mainWindow.webContents.openDevTools();
+
   // Apply always-on-bottom if saved
   if (windowState.isAlwaysOnBottom) {
     mainWindow.setAlwaysOnBottom(true);
