@@ -15,7 +15,9 @@ const DEFAULT_SETTINGS = {
     pomodoro: true,
     notes: true,
     weather: true
-  }
+  },
+  supabaseUrl: "",
+  supabaseKey: ""
 };
 
 let currentSettings = { ...DEFAULT_SETTINGS };
@@ -268,6 +270,28 @@ function initSettingsUI() {
       saveSettings();
     });
   });
+
+  // Supabase Integration Section
+  const supabaseUrlInput = document.getElementById("supabase-url-input");
+  const supabaseKeyInput = document.getElementById("supabase-key-input");
+  const supabaseSaveBtn = document.getElementById("supabase-save-btn");
+
+  if (supabaseUrlInput && supabaseKeyInput && supabaseSaveBtn) {
+    supabaseUrlInput.value = currentSettings.supabaseUrl || "";
+    supabaseKeyInput.value = currentSettings.supabaseKey || "";
+
+    supabaseSaveBtn.addEventListener("click", () => {
+      const url = supabaseUrlInput.value.trim();
+      const key = supabaseKeyInput.value.trim();
+
+      currentSettings.supabaseUrl = url;
+      currentSettings.supabaseKey = key;
+      saveSettings();
+
+      alert("Supabase 연동 설정이 저장되었습니다. 동기화를 반영하기 위해 화면을 새로고침합니다.");
+      window.location.reload();
+    });
+  }
 
   // Electron App Exit Button
   const exitSection = document.getElementById("electron-only-section");

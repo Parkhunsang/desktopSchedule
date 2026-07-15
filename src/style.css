@@ -2174,3 +2174,31 @@ body.light-mode .detached-note-title {
 body.light-mode .detached-note-footer {
   border-top-color: rgba(18, 19, 26, 0.04);
 }
+
+/* Supabase Settings Panel Styles */
+#supabase-sync-section input.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #fff;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+body.light-mode #supabase-sync-section input.glass-input {
+  background: rgba(18, 19, 26, 0.03);
+  border-color: rgba(18, 19, 26, 0.08);
+  color: #12131a;
+}
+
+#supabase-sync-section input.glass-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-glow);
+}
+
+body.light-mode #supabase-sync-section input.glass-input:focus {
+  background: rgba(18, 19, 26, 0.05);
+  border-color: #12131a;
+}

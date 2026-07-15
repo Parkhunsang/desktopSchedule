@@ -1,3 +1,5 @@
+import { getSupabaseClient } from './supabaseClient.js';
+
 let events = []; // Array of { id, title, date (YYYY-MM-DD), time (HH:MM), color, desc }
 let currentDate = new Date(); // Today's date
 let selectedDate = new Date(); // Currently clicked date
@@ -60,6 +62,86 @@ export function initCalendar() {
   // Initial Render
   renderCalendar();
   renderAgenda();
+
+  // Sync cloud events via Supabase (async)
+  syncSupabaseEvents();
+}
+
+async function syncSupabaseEvents() {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.log("Supabase is not configured yet. Cloud events syncing is inactive.");
+    return;
+  }
+
+  try {
+    // 1. Fetch existing cloud events
+    const { data: supabaseEvents, error } = await supabase
+      .from('scheduler_events')
+      .select('*');
+
+    if (error) throw error;
+
+    if (supabaseEvents && supabaseEvents.length > 0) {
+      const formattedEvents = supabaseEvents.map(se => ({
+        id: se.id,
+        title: se.title,
+        date: se.date,
+        time: se.time || "19:00",
+        endTime: se.end_time || "20:00",
+        color: se.color || "#8b5cf6",
+        desc: se.desc || "",
+        isExternal: true
+      }));
+
+      const localIds = new Set(events.map(e => e.id));
+      formattedEvents.forEach(fe => {
+        if (!localIds.has(fe.id)) {
+          events.push(fe);
+        }
+      });
+
+      renderCalendar();
+      renderAgenda();
+    }
+
+    // 2. Subscribe to new event inserts in Realtime
+    supabase
+      .channel('supabase-calendar-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'scheduler_events',
+        },
+        (payload) => {
+          console.log('Realtime insert received from Supabase:', payload);
+          const newSe = payload.new;
+          
+          if (events.some(e => e.id === newSe.id)) return;
+
+          const formatted = {
+            id: newSe.id,
+            title: newSe.title,
+            date: newSe.date,
+            time: newSe.time || "19:00",
+            endTime: newSe.end_time || "20:00",
+            color: newSe.color || "#8b5cf6",
+            desc: newSe.desc || "",
+            isExternal: true
+          };
+
+          events.push(formatted);
+          renderCalendar();
+          renderAgenda();
+        }
+      )
+      .subscribe();
+
+  } catch (err) {
+    console.error("Failed to sync Supabase events:", err);
+  }
 }
 
 function loadEvents() {

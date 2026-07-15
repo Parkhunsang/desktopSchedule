@@ -4,7 +4,7 @@ const fs = require('fs');
 
 let mainWindow = null;
 let tray = null;
-let windowState = { x: undefined, y: undefined, width: 1280, height: 850, isAlwaysOnBottom: false };
+let windowState = { x: undefined, y: undefined, width: 1280, height: 850, isAlwaysOnBottom: false, apiKey: '' };
 
 const stateFilePath = path.join(app.getPath('userData'), 'window-state.json');
 
@@ -14,6 +14,11 @@ function loadWindowState() {
     if (fs.existsSync(stateFilePath)) {
       const data = fs.readFileSync(stateFilePath, 'utf8');
       windowState = { ...windowState, ...JSON.parse(data) };
+    }
+    // Generate API Key if not exists
+    if (!windowState.apiKey) {
+      windowState.apiKey = generateApiKey();
+      fs.writeFileSync(stateFilePath, JSON.stringify(windowState), 'utf8');
     }
   } catch (e) {
     console.error("Failed to load window state", e);

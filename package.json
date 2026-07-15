@@ -14,5 +14,8 @@
   "devDependencies": {
     "electron": "^31.0.1",
     "vite": "^8.0.12"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.5"
   }
 }
