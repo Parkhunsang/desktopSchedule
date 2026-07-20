@@ -274,6 +274,60 @@ ipcMain.on('open-external', (event, url) => {
   }
 });
 
+ipcMain.handle('open-auth-window', async (event, authUrl) => {
+  return new Promise((resolve) => {
+    const authWindow = new BrowserWindow({
+      width: 520,
+      height: 680,
+      show: true,
+      autoHideMenuBar: true,
+      title: 'Google 계정 로그인',
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    authWindow.loadURL(authUrl);
+
+    const handleNavigation = (url) => {
+      if (url.includes('#access_token=') || url.includes('access_token=')) {
+        try {
+          const rawParams = url.split('#')[1] || url.split('?')[1] || '';
+          const params = new URLSearchParams(rawParams);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            setTimeout(() => {
+              try { authWindow.close(); } catch (err) {}
+            }, 300);
+            resolve({ access_token: accessToken, refresh_token: refreshToken });
+            return true;
+          }
+        } catch (e) {
+          console.error("Failed to parse OAuth tokens from URL:", e);
+        }
+      }
+      return false;
+    };
+
+    authWindow.webContents.on('will-redirect', (e, url) => {
+      if (handleNavigation(url)) {
+        e.preventDefault();
+      }
+    });
+
+    authWindow.webContents.on('did-navigate', (e, url) => {
+      handleNavigation(url);
+    });
+
+    authWindow.on('closed', () => {
+      resolve(null);
+    });
+  });
+});
+
 ipcMain.on('close-window', (event) => {
   const webContents = event.sender;
   const win = BrowserWindow.fromWebContents(webContents);
@@ -291,7 +345,8 @@ function createPreloadScript() {
       exitApp: () => ipcRenderer.send('exit-app'),
       detachNote: (noteId) => ipcRenderer.send('detach-note', noteId),
       closeWindow: () => ipcRenderer.send('close-window'),
-      openExternal: (url) => ipcRenderer.send('open-external', url)
+      openExternal: (url) => ipcRenderer.send('open-external', url),
+      openAuthWindow: (authUrl) => ipcRenderer.invoke('open-auth-window', authUrl)
     });
   `;
   fs.writeFileSync(preloadPath, code, 'utf8');

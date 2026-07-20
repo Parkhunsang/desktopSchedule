@@ -73,8 +73,25 @@ export async function signInWithGoogle() {
 
     if (data?.url) {
       console.log("[Auth] Opening Google OAuth URL:", data.url);
-      if (window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
-        window.electronAPI.openExternal(data.url);
+
+      if (window.electronAPI && typeof window.electronAPI.openAuthWindow === 'function') {
+        // Electron desktop app: Open in-app auth popup, capture tokens and set session!
+        const tokens = await window.electronAPI.openAuthWindow(data.url);
+        if (tokens && tokens.access_token && tokens.refresh_token) {
+          console.log("[Auth] Electron session tokens captured! Setting session...");
+          const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token
+          });
+
+          if (!sessionErr && sessionData?.user) {
+            currentUser = sessionData.user;
+            renderAuthUI(currentUser);
+            await migrateLocalDataToCloud(currentUser);
+            alert("🎉 데스크톱 위젯 로그인 성공!\n로컬 일정이 클라우드로 완벽하게 동기화되었습니다.");
+            window.location.reload();
+          }
+        }
       } else {
         window.location.href = data.url;
       }
