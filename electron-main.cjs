@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -266,10 +266,6 @@ ipcMain.on('detach-note', (event, noteId) => {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     subWindow.loadURL(`file://${indexPath}?detachedNoteId=${noteId}`);
   }
-});
-
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell } = require('electron');
-
 ipcMain.on('open-external', (event, url) => {
   if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
     shell.openExternal(url);
