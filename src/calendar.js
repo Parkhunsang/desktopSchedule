@@ -74,7 +74,7 @@ async function syncSupabaseEvents() {
         date: se.date,
         time: se.time || "19:00",
         endTime: se.end_time || "20:00",
-        color: se.color || "#8b5cf6",
+        color: resolveEventColor(se),
         desc: se.desc || "",
         isExternal: true
       }));
@@ -558,4 +558,32 @@ function hideEventModalError() {
   if (errorEl) {
     errorEl.classList.add("hidden");
   }
+}
+
+/**
+ * Smartly resolves dot color for existing/imported cloud events
+ */
+function resolveEventColor(se) {
+  if (se && se.color && se.color !== '#8b5cf6') {
+    return se.color;
+  }
+
+  const title = (se?.title || '').toLowerCase();
+  if (title.includes('개발') || title.includes('업무') || title.includes('work') || title.includes('스케줄러')) {
+    return '#3b82f6'; // 파랑 (업무)
+  }
+  if (title.includes('미팅') || title.includes('회의') || title.includes('스프린트') || title.includes('약속')) {
+    return '#f59e0b'; // 노랑 (미팅)
+  }
+  if (title.includes('영어') || title.includes('공부') || title.includes('학습') || title.includes('study')) {
+    return '#8b5cf6'; // 보라 (공부)
+  }
+  if (title.includes('운동') || title.includes('개인') || title.includes('휴식')) {
+    return '#10b981'; // 초록 (개인)
+  }
+
+  // Hash palette for unknown items to ensure vibrant color distribution
+  const palette = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
+  const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return palette[hash % palette.length];
 }
