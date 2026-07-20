@@ -1,4 +1,4 @@
-// Local fallback quotes dataset for offline use or API failures
+// Local quotes dataset for instantaneous, reliable response without network errors
 const fallbackQuotes = [
   { text: "삶이 있는 한 희망은 있다.", author: "키케로" },
   { text: "자신을 믿어라. 겸손하지만 합리적인 자신감 없이는 성공하거나 행복할 수 없다.", author: "노먼 빈센트 필" },
@@ -14,49 +14,7 @@ const fallbackQuotes = [
   { text: "가장 어두운 밤도 언젠가는 끝나고 해가 떠오를 것이다.", author: "빅토르 위고" }
 ];
 
-// Get a random quote from the fallback dataset
-function getFallbackQuote() {
+export async function getRandomQuote() {
   const randomIndex = Math.floor(Math.random() * fallbackQuotes.length);
   return fallbackQuotes[randomIndex];
-}
-
-/**
- * Fetches a random quote from a public API, falling back to local dataset on failure.
- * Includes a timeout of 1.2s to prevent app launch freezing.
- */
-export async function getRandomQuote() {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2s timeout
-
-  try {
-    // Calling helper translation API from qwer.pw which provides good Korean quotes
-    const response = await fetch("https://api.qwer.pw/request/helpful_translation?apikey=guest", {
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    // api.qwer.pw response format: 
-    // [ { respond: { code: 200, message: "success" } }, { result: { title: "Author", translation: "Quote" } } ]
-    if (data && data[1] && data[1].result) {
-      const { title, translation } = data[1].result;
-      if (translation && translation.trim()) {
-        return {
-          text: translation.trim(),
-          author: title ? title.trim() : "작자 미상"
-        };
-      }
-    }
-    
-    throw new Error("Invalid quote data structure from API");
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.warn("Real-time quote API failed, serving local fallback:", error.message);
-    return getFallbackQuote();
-  }
 }
