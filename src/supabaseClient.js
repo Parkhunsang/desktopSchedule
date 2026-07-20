@@ -15,7 +15,7 @@ export function getSupabaseClient() {
 
   if (envUrl && envKey && envUrl.trim() && envKey.trim()) {
     try {
-      const cleanedUrl = envUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '').trim();
+      const cleanedUrl = envUrl.replace(/(\/rest\/v1\/?|\/auth\/v1\/?|\/)+$/g, '').trim();
       supabase = createClient(cleanedUrl, envKey.trim());
       return supabase;
     } catch (e) {
