@@ -49,31 +49,39 @@ export async function initAuth(onUserChangeCallback) {
 
 export async function signInWithGoogle() {
   console.log("[Auth] signInWithGoogle triggered.");
-
-  // If running inside Electron desktop app widget
-  if (window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
-    console.log("[Auth] Electron environment detected. Opening Chrome browser...");
-    window.electronAPI.openExternal("https://desktopschedule.pages.dev");
-    return;
-  }
-
   const supabase = getSupabaseClient();
   if (!supabase) {
     alert("Supabase 클라우드 연결 설정이 필요합니다.");
     return;
   }
 
-  const redirectUrl = window.location.origin;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectUrl
-    }
-  });
+  try {
+    const redirectUrl = "https://desktopschedule.pages.dev";
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true
+      }
+    });
 
-  if (error) {
-    console.error("[Auth Error] Google sign-in failed:", error.message);
-    alert(`로그인 실패: ${error.message}`);
+    if (error) {
+      console.error("[Auth Error] Google sign-in failed:", error.message);
+      alert(`로그인 실패: ${error.message}`);
+      return;
+    }
+
+    if (data?.url) {
+      console.log("[Auth] Opening Google OAuth URL:", data.url);
+      if (window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
+        window.electronAPI.openExternal(data.url);
+      } else {
+        window.location.href = data.url;
+      }
+    }
+  } catch (err) {
+    console.error("[Auth System Error]", err);
+    alert(`로그인 시스템 오류: ${err.message}`);
   }
 }
 
@@ -171,7 +179,6 @@ export async function exportAllLocalDataToCloud() {
 
     let successCount = 0;
     for (const evt of events) {
-      // Send core supported columns (title, date, time, user_id)
       const dbEvent = {
         title: evt.title,
         date: evt.date,
