@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "desktop": "electron .",
-    "desktop:dist": "npm run build && electron ."
+    "desktop:dist": "npm run build && electron .",
+    "electron": "electron ."
   },
   "devDependencies": {
     "electron": "^31.0.1",
