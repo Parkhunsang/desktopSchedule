@@ -23,18 +23,18 @@ export function initCalendar() {
   const cancelBtn = document.getElementById("cancel-event-btn");
   const modalOverlay = document.getElementById("event-modal-overlay");
 
-  if (addBtn) addBtn.addEventListener("click", openAddEventModal);
-  if (cancelBtn) cancelBtn.addEventListener("click", closeAddEventModal);
+  if (addBtn) addBtn.addEventListener("click", () => openEventModal());
+  if (cancelBtn) cancelBtn.addEventListener("click", closeEventModal);
   if (modalOverlay) {
     modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) closeAddEventModal();
+      if (e.target === modalOverlay) closeEventModal();
     });
   }
 
   // Event Form Submit
   const eventForm = document.getElementById("event-form");
   if (eventForm) {
-    eventForm.addEventListener("submit", handleEventFormSubmit);
+    eventForm.addEventListener("submit", saveEvent);
   }
 
   // Initial Render
