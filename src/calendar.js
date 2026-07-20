@@ -514,14 +514,62 @@ function saveEvent(e) {
   closeEventModal();
   renderCalendar();
   renderAgenda();
+
+  // Supabase Cloud DB Sync
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    const user = getCurrentUser();
+    const dbEvent = {
+      title,
+      date,
+      time,
+      end_time: endTime || "10:00",
+      color: color || "#3b82f6",
+      desc: desc || "",
+      ...(user?.id ? { user_id: user.id } : {})
+    };
+
+    if (id && !id.startsWith("event-")) {
+      supabase.from('scheduler_events').update(dbEvent).eq('id', id).then(({ error }) => {
+        if (error) console.warn("[Supabase Event Update Warning]", error);
+      });
+    } else {
+      supabase.from('scheduler_events').insert([dbEvent]).then(({ error }) => {
+        if (error) console.warn("[Supabase Event Insert Warning]", error);
+      });
+    }
+  }
 }
 
 function deleteEvent(id) {
+  const targetEvent = events.find(ev => ev.id === id);
   events = events.filter(ev => ev.id !== id);
   saveEventsToStorage();
   closeEventModal();
   renderCalendar();
   renderAgenda();
+
+  // Supabase Cloud DB Delete Sync
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    const user = getCurrentUser();
+    let query = supabase.from('scheduler_events').delete();
+    
+    if (id && !id.startsWith("event-")) {
+      query = query.eq('id', id);
+    } else if (targetEvent) {
+      query = query.eq('title', targetEvent.title).eq('date', targetEvent.date);
+    }
+
+    if (user?.id) {
+      query = query.eq('user_id', user.id);
+    }
+
+    query.then(({ error }) => {
+      if (error) console.warn("[Supabase Event Delete Warning]", error);
+      else console.log("[Supabase Event Deleted Successfully]", id);
+    });
+  }
 }
 
 // Helpers
