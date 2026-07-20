@@ -48,8 +48,11 @@ export async function initAuth(onUserChangeCallback) {
 }
 
 export async function signInWithGoogle() {
+  console.log("[Auth] signInWithGoogle triggered.");
+
   // If running inside Electron desktop app widget
-  if (window.electronAPI && typeof window.electronAPI.openExternal === 'function' && window.location.protocol === 'file:') {
+  if (window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
+    console.log("[Auth] Electron environment detected. Opening Chrome browser...");
     window.electronAPI.openExternal("https://desktopschedule.pages.dev");
     return;
   }
@@ -90,13 +93,22 @@ function setupAuthEventListeners() {
   const migrateBtn = document.getElementById("manual-migrate-btn");
 
   if (loginBtn) {
-    loginBtn.addEventListener("click", () => signInWithGoogle());
+    loginBtn.onclick = (e) => {
+      e.preventDefault();
+      signInWithGoogle();
+    };
   }
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => signOut());
+    logoutBtn.onclick = (e) => {
+      e.preventDefault();
+      signOut();
+    };
   }
   if (migrateBtn) {
-    migrateBtn.addEventListener("click", () => exportAllLocalDataToCloud());
+    migrateBtn.onclick = (e) => {
+      e.preventDefault();
+      exportAllLocalDataToCloud();
+    };
   }
 }
 
@@ -162,7 +174,11 @@ export async function exportAllLocalDataToCloud() {
       };
 
       const { error } = await supabase.from('scheduler_events').insert([dbEvent]);
-      if (!error) successCount++;
+      if (!error) {
+        successCount++;
+      } else {
+        console.warn("[Migration Insert Warning]", error);
+      }
     }
 
     alert(`🎉 성공! 위젯 앱의 일정 ${successCount}개가 클라우드로 모두 이전되었습니다.\n이제 배포 사이트에서도 동일하게 보입니다!`);
