@@ -48,10 +48,10 @@ export async function initAuth(onUserChangeCallback) {
 }
 
 export async function signInWithGoogle() {
-  console.log("[Auth] signInWithGoogle triggered.");
+  console.log("[Auth Debug] Google Login button clicked!");
   const supabase = getSupabaseClient();
   if (!supabase) {
-    alert("Supabase 클라우드 연결 설정이 필요합니다.");
+    alert("Supabase 클라우드 연결 설정이 필요합니다. (local.env / 환경변수 확인)");
     return;
   }
 

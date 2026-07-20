@@ -289,13 +289,17 @@ body {
   transform: none !important;
 }
 
-/* Disable dragging on sub-widgets to preserve click events and forms */
+/* Disable dragging on sub-widgets and buttons to preserve click events and forms */
 .weather-widget,
 .icon-btn,
+.auth-container,
+.google-login-btn,
+.user-profile-chip,
 .settings-drawer,
 .modal-overlay,
 .widget-card {
-  -webkit-app-region: no-drag;
+  -webkit-app-region: no-drag !important;
+  pointer-events: auto !important;
 }
 
 .greeting-container h1 {
@@ -355,7 +359,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
+  cursor: pointer !important;
+  pointer-events: auto !important;
   transition: all 0.2s ease;
 }
 
