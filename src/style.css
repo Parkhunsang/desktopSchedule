@@ -1,7 +1,11 @@
 /* CSS Variables & Global Root */
 :root {
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans:
+    "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
 
   /* Theme Defaults (Aurora Night) */
   --accent-glow: #00f2fe;
@@ -95,19 +99,43 @@ body {
 
 /* Background Presets */
 .preset-aurora {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #311042 70%, #022c22 100%);
+  background: linear-gradient(
+    135deg,
+    #0f172a 0%,
+    #1e1b4b 35%,
+    #311042 70%,
+    #022c22 100%
+  );
 }
 
 .preset-sunset {
-  background: linear-gradient(135deg, #2a0845 0%, #6441a5 35%, #b04b6b 70%, #f65c78 100%);
+  background: linear-gradient(
+    135deg,
+    #2a0845 0%,
+    #6441a5 35%,
+    #b04b6b 70%,
+    #f65c78 100%
+  );
 }
 
 .preset-neon {
-  background: linear-gradient(135deg, #180b2a 0%, #2f0b43 35%, #051937 70%, #004d7a 100%);
+  background: linear-gradient(
+    135deg,
+    #180b2a 0%,
+    #2f0b43 35%,
+    #051937 70%,
+    #004d7a 100%
+  );
 }
 
 .preset-dark {
-  background: linear-gradient(135deg, #090a0f 0%, #14151b 40%, #1d1e26 80%, #111216 100%);
+  background: linear-gradient(
+    135deg,
+    #090a0f 0%,
+    #14151b 40%,
+    #1d1e26 80%,
+    #111216 100%
+  );
 }
 
 .preset-clean {
@@ -151,12 +179,17 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: var(--glass-shadow);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
 }
 
 .glass-card:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow), 0 0 15px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    var(--glass-shadow),
+    0 0 15px rgba(255, 255, 255, 0.05);
 }
 
 .glass-input {
@@ -168,7 +201,10 @@ body {
   font-family: var(--font-sans);
   font-size: 0.95rem;
   outline: none;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .glass-input:focus {
@@ -262,7 +298,6 @@ body {
   -webkit-app-region: no-drag;
 }
 
-
 .greeting-container h1 {
   font-size: 1.8rem;
   font-weight: 700;
@@ -323,6 +358,12 @@ body {
   line-height: 1.2;
 }
 
+#weather-location {
+  font-size: 0.7rem;
+  color: var(--accent-glow);
+  font-weight: 500;
+}
+
 #weather-temp {
   font-weight: 600;
 }
@@ -358,6 +399,12 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+#settings-toggle-btn {
+  width: auto;
+  height: auto;
+  padding: 12px;
 }
 
 .icon-btn svg {
@@ -421,7 +468,11 @@ body {
   gap: 16px;
   position: relative; /* Create stacking context for tooltips inside widgets */
   z-index: 1;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, z-index 0s;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease,
+    z-index 0s;
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
@@ -691,7 +742,11 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-secondary) 0%, var(--accent-glow) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--accent-secondary) 0%,
+    var(--accent-glow) 100%
+  );
   border-radius: 10px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
@@ -837,7 +892,9 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  transition: all 0.2s ease, opacity 0.3s ease;
+  transition:
+    all 0.2s ease,
+    opacity 0.3s ease;
 }
 
 .task-item:hover {
@@ -875,7 +932,7 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.task-checkbox:checked~.checkmark {
+.task-checkbox:checked ~ .checkmark {
   background-color: var(--accent-glow);
   border-color: var(--accent-glow);
   box-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
@@ -894,7 +951,7 @@ body {
   transform: rotate(45deg);
 }
 
-.task-checkbox:checked~.checkmark::after {
+.task-checkbox:checked ~ .checkmark::after {
   display: block;
 }
 
@@ -1503,22 +1560,46 @@ body {
 }
 
 .wallpaper-btn.preset-1 {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #311042 70%, #022c22 100%);
+  background: linear-gradient(
+    135deg,
+    #0f172a 0%,
+    #1e1b4b 35%,
+    #311042 70%,
+    #022c22 100%
+  );
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .wallpaper-btn.preset-2 {
-  background: linear-gradient(135deg, #2a0845 0%, #6441a5 35%, #b04b6b 70%, #f65c78 100%);
+  background: linear-gradient(
+    135deg,
+    #2a0845 0%,
+    #6441a5 35%,
+    #b04b6b 70%,
+    #f65c78 100%
+  );
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .wallpaper-btn.preset-3 {
-  background: linear-gradient(135deg, #180b2a 0%, #2f0b43 35%, #051937 70%, #004d7a 100%);
+  background: linear-gradient(
+    135deg,
+    #180b2a 0%,
+    #2f0b43 35%,
+    #051937 70%,
+    #004d7a 100%
+  );
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .wallpaper-btn.preset-4 {
-  background: linear-gradient(135deg, #090a0f 0%, #14151b 40%, #1d1e26 80%, #111216 100%);
+  background: linear-gradient(
+    135deg,
+    #090a0f 0%,
+    #14151b 40%,
+    #1d1e26 80%,
+    #111216 100%
+  );
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -1640,12 +1721,12 @@ body {
   transition: transform 0.3s;
 }
 
-.switch-container input:checked+.slider-switch {
+.switch-container input:checked + .slider-switch {
   background-color: var(--accent-glow);
   box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
 }
 
-.switch-container input:checked+.slider-switch::before {
+.switch-container input:checked + .slider-switch::before {
   transform: translateX(20px);
   background-color: var(--text-dark);
 }
@@ -1723,7 +1804,6 @@ body {
 }
 
 @keyframes shake {
-
   0%,
   100% {
     transform: translateX(0);
@@ -1771,7 +1851,9 @@ body {
   z-index: 99999; /* Always on top */
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+  transition:
+    opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.6s;
   border-radius: 28px; /* Matching the desktop-bg-wrapper border-radius */
   overflow: hidden;
 }
@@ -1793,19 +1875,21 @@ body {
 }
 
 .quote-text {
-  font-family: 'Gowun Batang', serif;
+  font-family: "Gowun Batang", serif;
   font-size: 1.65rem;
   font-weight: 700;
   line-height: 1.7;
   color: #ffffff;
   margin-bottom: 24px;
   letter-spacing: -0.3px;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 15px rgba(255, 255, 255, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.5);
   word-break: keep-all;
 }
 
 .quote-author {
-  font-family: 'Gowun Batang', serif;
+  font-family: "Gowun Batang", serif;
   font-size: 1.05rem;
   font-weight: 400;
   color: var(--text-muted);
@@ -1842,11 +1926,16 @@ body {
   padding: 8px 12px;
   width: max-content;
   max-width: 220px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.2s;
+  transition:
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.2s;
   pointer-events: none; /* Prevent tooltip from blocking mouse clicks on underlying cells */
 }
 
@@ -2050,10 +2139,22 @@ body.light-mode .note-textarea {
   color: #12131a;
 }
 
-body.light-mode .note-yellow { background: rgba(253, 224, 71, 0.35); border-color: rgba(253, 224, 71, 0.5); }
-body.light-mode .note-pink { background: rgba(244, 114, 182, 0.35); border-color: rgba(244, 114, 182, 0.5); }
-body.light-mode .note-green { background: rgba(52, 211, 153, 0.35); border-color: rgba(52, 211, 153, 0.5); }
-body.light-mode .note-blue { background: rgba(96, 165, 250, 0.35); border-color: rgba(96, 165, 250, 0.5); }
+body.light-mode .note-yellow {
+  background: rgba(253, 224, 71, 0.35);
+  border-color: rgba(253, 224, 71, 0.5);
+}
+body.light-mode .note-pink {
+  background: rgba(244, 114, 182, 0.35);
+  border-color: rgba(244, 114, 182, 0.5);
+}
+body.light-mode .note-green {
+  background: rgba(52, 211, 153, 0.35);
+  border-color: rgba(52, 211, 153, 0.5);
+}
+body.light-mode .note-blue {
+  background: rgba(96, 165, 250, 0.35);
+  border-color: rgba(96, 165, 250, 0.5);
+}
 
 /* --- Drag & Drop Interaction Styles --- */
 .widget-card.dragging {
@@ -2065,7 +2166,9 @@ body.light-mode .note-blue { background: rgba(96, 165, 250, 0.35); border-color:
 
 .widget-card.drag-over {
   border-color: var(--accent-glow) !important;
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.25), var(--glass-shadow);
+  box-shadow:
+    0 0 20px rgba(0, 242, 254, 0.25),
+    var(--glass-shadow);
   transform: translateY(2px);
 }
 
