@@ -63,7 +63,7 @@ async function fetchRealWeather() {
 
   try {
     // Single clean geolocation & reverse geocode API (Free, CORS enabled, no 403)
-    const response = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=ko");
+    const response = await fetch("https://api-bdc.io/data/reverse-geocode-client?localityLanguage=ko");
     if (response.ok) {
       const data = await response.json();
       if (data && data.latitude && data.longitude) {
