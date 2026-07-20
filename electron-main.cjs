@@ -266,6 +266,8 @@ ipcMain.on('detach-note', (event, noteId) => {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     subWindow.loadURL(`file://${indexPath}?detachedNoteId=${noteId}`);
   }
+});
+
 ipcMain.on('open-external', (event, url) => {
   if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
     shell.openExternal(url);
