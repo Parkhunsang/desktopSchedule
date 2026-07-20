@@ -28,3 +28,6 @@ dist-ssr
 .env.*
 *.env
 local.env
+
+# Ignore lock file for cloud deployment compatibility
+package-lock.json
