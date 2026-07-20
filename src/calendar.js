@@ -1,4 +1,5 @@
 import { getSupabaseClient } from './supabaseClient.js';
+import { getCurrentUser } from './auth.js';
 
 let events = []; // Array of { id, title, date (YYYY-MM-DD), time (HH:MM), color, desc }
 let currentDate = new Date(); // Today's date
@@ -18,46 +19,23 @@ export function initCalendar() {
   }
 
   // Modal Buttons
-  const addEventBtn = document.getElementById("add-event-btn");
-  const closeModalBtn = document.getElementById("close-modal-btn");
+  const addBtn = document.getElementById("add-event-btn");
+  const cancelBtn = document.getElementById("cancel-event-btn");
+  const modalOverlay = document.getElementById("event-modal-overlay");
+
+  if (addBtn) addBtn.addEventListener("click", openAddEventModal);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeAddEventModal);
+  if (modalOverlay) {
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) closeAddEventModal();
+    });
+  }
+
+  // Event Form Submit
   const eventForm = document.getElementById("event-form");
-  const deleteEventBtn = document.getElementById("delete-event-btn");
-  
-  if (addEventBtn) {
-    addEventBtn.addEventListener("click", () => openEventModal());
-  }
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener("click", closeEventModal);
-  }
   if (eventForm) {
-    eventForm.addEventListener("submit", saveEvent);
+    eventForm.addEventListener("submit", handleEventFormSubmit);
   }
-  if (deleteEventBtn) {
-    deleteEventBtn.addEventListener("click", () => {
-      const id = document.getElementById("event-id").value;
-      if (id) {
-        deleteEvent(id);
-      }
-    });
-  }
-
-  // Close modal on overlay click
-  const modal = document.getElementById("event-modal");
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeEventModal();
-    });
-  }
-
-  // Clear error warning on input changes
-  const titleInput = document.getElementById("event-title");
-  const timeInput = document.getElementById("event-time");
-  const endTimeInput = document.getElementById("event-end-time");
-  [titleInput, timeInput, endTimeInput].forEach(input => {
-    if (input) {
-      input.addEventListener("input", hideEventModalError);
-    }
-  });
 
   // Initial Render
   renderCalendar();
@@ -74,11 +52,16 @@ async function syncSupabaseEvents() {
     return;
   }
 
+  const user = getCurrentUser();
+
   try {
-    // 1. Fetch existing cloud events
-    const { data: supabaseEvents, error } = await supabase
-      .from('scheduler_events')
-      .select('*');
+    // 1. Fetch existing cloud events (filtered by user_id if authenticated)
+    let query = supabase.from('scheduler_events').select('*');
+    if (user && user.id) {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data: supabaseEvents, error } = await query;
 
     if (error) throw error;
 

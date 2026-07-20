@@ -7,6 +7,7 @@ import { initPomodoro } from './pomodoro.js';
 import { initNotes } from './notes.js';
 import { getRandomQuote } from './quotes.js';
 import { initLayout } from './layout.js';
+import { initAuth } from './auth.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -54,7 +55,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadSettings();
   initSettingsDrawer();
 
-  // 4. Start running system clock, date display, simulated weather engine
+  // 4. Initialize Auth & System clock/weather
+  initAuth(() => {
+    initCalendar();
+  });
   startClockAndWeather();
 
   // 5. Initialise widgets
