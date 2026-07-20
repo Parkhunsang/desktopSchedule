@@ -103,31 +103,40 @@ async function syncSupabaseEvents() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'scheduler_events',
         },
         (payload) => {
-          console.log('Realtime insert received from Supabase:', payload);
-          const newSe = payload.new;
-          
-          // Single line check: ID is pre-assigned identically on both local and Supabase DB
-          if (events.some(e => e.id === newSe.id)) return;
+          console.log(`[Realtime ${payload.eventType}] received from Supabase:`, payload);
 
-          const formatted = {
-            id: newSe.id,
-            title: newSe.title,
-            date: newSe.date,
-            time: newSe.time || "19:00",
-            endTime: newSe.end_time || "20:00",
-            color: resolveEventColor(newSe),
-            desc: newSe.desc || "",
-            isExternal: true
-          };
+          if (payload.eventType === 'INSERT') {
+            const newSe = payload.new;
+            if (events.some(e => e.id === newSe.id)) return;
 
-          events.push(formatted);
-          renderCalendar();
-          renderAgenda();
+            const formatted = {
+              id: newSe.id,
+              title: newSe.title,
+              date: newSe.date,
+              time: newSe.time || "19:00",
+              endTime: newSe.end_time || "20:00",
+              color: resolveEventColor(newSe),
+              desc: newSe.desc || "",
+              isExternal: true
+            };
+
+            events.push(formatted);
+            renderCalendar();
+            renderAgenda();
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old?.id;
+            if (deletedId) {
+              events = events.filter(e => e.id !== deletedId);
+              saveEventsToStorage();
+              renderCalendar();
+              renderAgenda();
+            }
+          }
         }
       );
 
