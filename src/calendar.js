@@ -111,22 +111,8 @@ async function syncSupabaseEvents() {
           console.log('Realtime insert received from Supabase:', payload);
           const newSe = payload.new;
           
-          // Prevent duplicate addition when Realtime echoes back user's own insert
-          const isAlreadyExist = events.some(e => 
-            e.id === newSe.id || 
-            (e.title === newSe.title && e.date === newSe.date && e.time === (newSe.time || "19:00"))
-          );
-
-          if (isAlreadyExist) {
-            // Update local temporary event ID with Supabase UUID
-            events = events.map(e => {
-              if (e.title === newSe.title && e.date === newSe.date && e.time === (newSe.time || "19:00")) {
-                return { ...e, id: newSe.id };
-              }
-              return e;
-            });
-            return;
-          }
+          // Single line check: ID is pre-assigned identically on both local and Supabase DB
+          if (events.some(e => e.id === newSe.id)) return;
 
           const formatted = {
             id: newSe.id,
@@ -503,6 +489,8 @@ function saveEvent(e) {
   // Validation: End time check removed to allow overnight schedules (e.g. 23:00 ~ 02:00) on the same date.
 
 
+  const targetId = id || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ("evt-" + Date.now()));
+
   if (id) {
     // Update existing event
     events = events.map(ev => {
@@ -514,7 +502,7 @@ function saveEvent(e) {
   } else {
     // Create new event
     const newEvent = {
-      id: "event-" + Date.now(),
+      id: targetId,
       title,
       date,
       time,
@@ -535,6 +523,7 @@ function saveEvent(e) {
   if (supabase) {
     const user = getCurrentUser();
     const dbEvent = {
+      id: targetId,
       title,
       date,
       time,
