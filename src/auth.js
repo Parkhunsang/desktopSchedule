@@ -213,6 +213,7 @@ export async function exportAllLocalDataToCloud(isManual = true) {
         date: evt.date,
         time: evt.time || "09:00",
         end_time: evt.endTime || evt.end_time || "10:00",
+        color: evt.color || "#3b82f6",
         ...(userId ? { user_id: userId } : {})
       };
 

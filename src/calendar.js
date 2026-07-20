@@ -20,11 +20,11 @@ export function initCalendar() {
 
   // Modal Buttons
   const addBtn = document.getElementById("add-event-btn");
-  const cancelBtn = document.getElementById("cancel-event-btn");
-  const modalOverlay = document.getElementById("event-modal-overlay");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const modalOverlay = document.getElementById("event-modal");
 
   if (addBtn) addBtn.addEventListener("click", () => openEventModal());
-  if (cancelBtn) cancelBtn.addEventListener("click", closeEventModal);
+  if (closeModalBtn) closeModalBtn.addEventListener("click", closeEventModal);
   if (modalOverlay) {
     modalOverlay.addEventListener("click", (e) => {
       if (e.target === modalOverlay) closeEventModal();
