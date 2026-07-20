@@ -268,6 +268,14 @@ ipcMain.on('detach-note', (event, noteId) => {
   }
 });
 
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, shell } = require('electron');
+
+ipcMain.on('open-external', (event, url) => {
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    shell.openExternal(url);
+  }
+});
+
 ipcMain.on('close-window', (event) => {
   const webContents = event.sender;
   const win = BrowserWindow.fromWebContents(webContents);
@@ -284,7 +292,8 @@ function createPreloadScript() {
     contextBridge.exposeInMainWorld('electronAPI', {
       exitApp: () => ipcRenderer.send('exit-app'),
       detachNote: (noteId) => ipcRenderer.send('detach-note', noteId),
-      closeWindow: () => ipcRenderer.send('close-window')
+      closeWindow: () => ipcRenderer.send('close-window'),
+      openExternal: (url) => ipcRenderer.send('open-external', url)
     });
   `;
   fs.writeFileSync(preloadPath, code, 'utf8');

@@ -48,6 +48,12 @@ export async function initAuth(onUserChangeCallback) {
 }
 
 export async function signInWithGoogle() {
+  // If running inside Electron desktop app widget
+  if (window.electronAPI && typeof window.electronAPI.openExternal === 'function' && window.location.protocol === 'file:') {
+    window.electronAPI.openExternal("https://desktopschedule.pages.dev");
+    return;
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     alert("Supabase 클라우드 연결 설정이 필요합니다.");
@@ -81,12 +87,16 @@ export async function signOut() {
 function setupAuthEventListeners() {
   const loginBtn = document.getElementById("google-login-btn");
   const logoutBtn = document.getElementById("auth-logout-btn");
+  const migrateBtn = document.getElementById("manual-migrate-btn");
 
   if (loginBtn) {
     loginBtn.addEventListener("click", () => signInWithGoogle());
   }
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => signOut());
+  }
+  if (migrateBtn) {
+    migrateBtn.addEventListener("click", () => exportAllLocalDataToCloud());
   }
 }
 
@@ -113,28 +123,34 @@ function renderAuthUI(user) {
 }
 
 /**
- * Automatically migrates existing local desktop_scheduler_events to Supabase cloud
- * under the signed-in user's account (user_id).
+ * Manually or automatically exports all local desktop_scheduler_events to Supabase cloud database
  */
-export async function migrateLocalDataToCloud(user) {
-  if (!user) return;
+export async function exportAllLocalDataToCloud() {
   const supabase = getSupabaseClient();
-  if (!supabase) return;
+  if (!supabase) {
+    alert("Supabase 클라우드 연결 설정이 필요합니다. (local.env / 환경변수 확인)");
+    return false;
+  }
 
-  const localKey = "desktop_scheduler_events";
-  const localData = localStorage.getItem(localKey);
-  if (!localData) return;
+  const localEventsData = localStorage.getItem("desktop_scheduler_events");
+  if (!localEventsData) {
+    alert("이전할 로컬 일정 데이터가 없습니다.");
+    return false;
+  }
 
   try {
-    const events = JSON.parse(localData);
-    if (!Array.isArray(events) || events.length === 0) return;
+    const events = JSON.parse(localEventsData);
+    if (!Array.isArray(events) || events.length === 0) {
+      alert("이전할 로컬 일정 데이터가 없습니다.");
+      return false;
+    }
 
-    // Check if migration has already been executed for this user
-    const migrationFlag = `migrated_${user.id}`;
-    if (localStorage.getItem(migrationFlag)) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || null;
 
-    console.log(`[Migration] Migrating ${events.length} local events to Supabase cloud for user ${user.id}...`);
+    console.log(`[Manual Migration] Exporting ${events.length} local events to Supabase...`);
 
+    let successCount = 0;
     for (const evt of events) {
       const dbEvent = {
         title: evt.title,
@@ -142,16 +158,23 @@ export async function migrateLocalDataToCloud(user) {
         time: evt.time || "09:00",
         type: evt.type || "work",
         priority: evt.priority || "medium",
-        user_id: user.id
+        ...(userId ? { user_id: userId } : {})
       };
 
-      // Insert event into Supabase scheduler_events
-      await supabase.from('scheduler_events').insert([dbEvent]);
+      const { error } = await supabase.from('scheduler_events').insert([dbEvent]);
+      if (!error) successCount++;
     }
 
-    localStorage.setItem(migrationFlag, "true");
-    console.log("[Migration] Local events successfully migrated to cloud.");
+    alert(`🎉 성공! 위젯 앱의 일정 ${successCount}개가 클라우드로 모두 이전되었습니다.\n이제 배포 사이트에서도 동일하게 보입니다!`);
+    return true;
   } catch (e) {
-    console.error("[Migration Error] Failed to migrate local data to cloud:", e);
+    console.error("[Migration Error]", e);
+    alert(`이전 중 오류가 발생했습니다: ${e.message}`);
+    return false;
   }
+}
+
+export async function migrateLocalDataToCloud(user) {
+  if (!user) return;
+  await exportAllLocalDataToCloud();
 }
