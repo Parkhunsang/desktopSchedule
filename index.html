@@ -63,7 +63,7 @@
           
           <!-- Auth Container -->
           <div class="auth-container">
-            <button id="google-login-btn" class="glass-btn google-login-btn" title="Google 로그인">
+            <button id="google-login-btn" onclick="window.signInWithGoogle && window.signInWithGoogle()" class="glass-btn google-login-btn" title="Google 로그인">
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -76,7 +76,7 @@
             <div id="user-profile-container" class="user-profile-chip" style="display: none;">
               <img id="user-avatar-img" src="" alt="avatar" class="user-avatar-img" />
               <span id="user-email-label" class="user-email-label">사용자</span>
-              <button id="auth-logout-btn" class="icon-btn-sm logout-btn" title="로그아웃">
+              <button id="auth-logout-btn" onclick="window.signOut && window.signOut()" class="icon-btn-sm logout-btn" title="로그아웃">
                 <i data-lucide="log-out"></i>
               </button>
             </div>
@@ -476,7 +476,7 @@
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
                   내 데스크톱 위젯 앱에 보관되어 있는 로컬 일정을 배포 사이트(클라우드)로 1초 만에 모두 이전합니다.
                 </p>
-                <button id="manual-migrate-btn" class="glass-btn primary-btn" style="font-size: 0.8rem; padding: 10px; width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px;">
+                <button id="manual-migrate-btn" onclick="window.exportAllLocalDataToCloud && window.exportAllLocalDataToCloud()" class="glass-btn primary-btn" style="font-size: 0.8rem; padding: 10px; width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px;">
                   <i data-lucide="cloud-upload"></i>
                   <span>🚀 내 위젯 일정을 클라우드로 이전하기</span>
                 </button>

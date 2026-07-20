@@ -94,22 +94,29 @@ function setupAuthEventListeners() {
 
   if (loginBtn) {
     loginBtn.onclick = (e) => {
-      e.preventDefault();
+      if (e) e.preventDefault();
       signInWithGoogle();
     };
   }
   if (logoutBtn) {
     logoutBtn.onclick = (e) => {
-      e.preventDefault();
+      if (e) e.preventDefault();
       signOut();
     };
   }
   if (migrateBtn) {
     migrateBtn.onclick = (e) => {
-      e.preventDefault();
+      if (e) e.preventDefault();
       exportAllLocalDataToCloud();
     };
   }
+}
+
+// Bind to window global for guaranteed inline/direct calls
+if (typeof window !== 'undefined') {
+  window.signInWithGoogle = signInWithGoogle;
+  window.signOut = signOut;
+  window.exportAllLocalDataToCloud = exportAllLocalDataToCloud;
 }
 
 function renderAuthUI(user) {
@@ -164,12 +171,11 @@ export async function exportAllLocalDataToCloud() {
 
     let successCount = 0;
     for (const evt of events) {
+      // Send core supported columns (title, date, time, user_id)
       const dbEvent = {
         title: evt.title,
         date: evt.date,
         time: evt.time || "09:00",
-        type: evt.type || "work",
-        priority: evt.priority || "medium",
         ...(userId ? { user_id: userId } : {})
       };
 
