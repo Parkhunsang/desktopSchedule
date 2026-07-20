@@ -20,7 +20,7 @@ export async function initAuth(onUserChangeCallback) {
     if (session?.user) {
       currentUser = session.user;
       renderAuthUI(currentUser);
-      await migrateLocalDataToCloud(currentUser);
+      await migrateLocalDataToCloud(currentUser, false);
       if (typeof onUserChangeCallback === 'function') onUserChangeCallback(currentUser);
     } else {
       renderAuthUI(null);
@@ -37,7 +37,7 @@ export async function initAuth(onUserChangeCallback) {
     renderAuthUI(currentUser);
 
     if (event === 'SIGNED_IN' && currentUser) {
-      await migrateLocalDataToCloud(currentUser);
+      await migrateLocalDataToCloud(currentUser, false);
       if (typeof onUserChangeCallback === 'function') onUserChangeCallback(currentUser);
     } else if (event === 'SIGNED_OUT') {
       if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
@@ -75,7 +75,6 @@ export async function signInWithGoogle() {
       console.log("[Auth] Opening Google OAuth URL:", data.url);
 
       if (window.electronAPI && typeof window.electronAPI.openAuthWindow === 'function') {
-        // Electron desktop app: Open in-app auth popup, capture tokens and set session!
         const tokens = await window.electronAPI.openAuthWindow(data.url);
         if (tokens && tokens.access_token && tokens.refresh_token) {
           console.log("[Auth] Electron session tokens captured! Setting session...");
@@ -87,7 +86,7 @@ export async function signInWithGoogle() {
           if (!sessionErr && sessionData?.user) {
             currentUser = sessionData.user;
             renderAuthUI(currentUser);
-            await migrateLocalDataToCloud(currentUser);
+            await migrateLocalDataToCloud(currentUser, false);
             alert("🎉 데스크톱 위젯 로그인 성공!\n로컬 일정이 클라우드로 완벽하게 동기화되었습니다.");
             window.location.reload();
           }
@@ -132,7 +131,7 @@ function setupAuthEventListeners() {
   if (migrateBtn) {
     migrateBtn.onclick = (e) => {
       if (e) e.preventDefault();
-      exportAllLocalDataToCloud();
+      exportAllLocalDataToCloud(true);
     };
   }
 }
@@ -141,7 +140,7 @@ function setupAuthEventListeners() {
 if (typeof window !== 'undefined') {
   window.signInWithGoogle = signInWithGoogle;
   window.signOut = signOut;
-  window.exportAllLocalDataToCloud = exportAllLocalDataToCloud;
+  window.exportAllLocalDataToCloud = (isManual = true) => exportAllLocalDataToCloud(isManual);
 }
 
 function renderAuthUI(user) {
@@ -167,35 +166,48 @@ function renderAuthUI(user) {
 }
 
 /**
- * Manually or automatically exports all local desktop_scheduler_events to Supabase cloud database
+ * Exports local events to Supabase cloud database with deduplication
  */
-export async function exportAllLocalDataToCloud() {
+export async function exportAllLocalDataToCloud(isManual = true) {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    alert("Supabase 클라우드 연결 설정이 필요합니다. (local.env / 환경변수 확인)");
+    if (isManual) alert("Supabase 클라우드 연결 설정이 필요합니다. (local.env / 환경변수 확인)");
     return false;
   }
 
   const localEventsData = localStorage.getItem("desktop_scheduler_events");
   if (!localEventsData) {
-    alert("이전할 로컬 일정 데이터가 없습니다.");
+    if (isManual) alert("이전할 로컬 일정 데이터가 없습니다.");
     return false;
   }
 
   try {
     const events = JSON.parse(localEventsData);
     if (!Array.isArray(events) || events.length === 0) {
-      alert("이전할 로컬 일정 데이터가 없습니다.");
+      if (isManual) alert("이전할 로컬 일정 데이터가 없습니다.");
       return false;
     }
 
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id || null;
 
-    console.log(`[Manual Migration] Exporting ${events.length} local events to Supabase...`);
+    // Check existing cloud events to prevent duplicate insertion
+    let existingQuery = supabase.from('scheduler_events').select('title, date');
+    if (userId) existingQuery = existingQuery.eq('user_id', userId);
+    const { data: existingEvents } = await existingQuery;
+
+    const existingKeys = new Set(
+      (existingEvents || []).map(e => `${e.title}_${e.date}`)
+    );
 
     let successCount = 0;
     for (const evt of events) {
+      const key = `${evt.title}_${evt.date}`;
+      if (existingKeys.has(key)) {
+        // Skip duplicate event
+        continue;
+      }
+
       const dbEvent = {
         title: evt.title,
         date: evt.date,
@@ -207,21 +219,33 @@ export async function exportAllLocalDataToCloud() {
       const { error } = await supabase.from('scheduler_events').insert([dbEvent]);
       if (!error) {
         successCount++;
-      } else {
-        console.warn("[Migration Insert Warning]", error);
+        existingKeys.add(key);
       }
     }
 
-    alert(`🎉 성공! 위젯 앱의 일정 ${successCount}개가 클라우드로 모두 이전되었습니다.\n이제 배포 사이트에서도 동일하게 보입니다!`);
+    if (isManual) {
+      if (successCount > 0) {
+        alert(`🎉 성공! 위젯 앱의 일정 ${successCount}개가 클라우드로 모두 이전되었습니다.\n이제 배포 사이트에서도 동일하게 보입니다!`);
+      } else {
+        alert("모든 일정이 이미 클라우드와 동일하게 이전되어 있습니다. (중복 없음)");
+      }
+    }
+
     return true;
   } catch (e) {
     console.error("[Migration Error]", e);
-    alert(`이전 중 오류가 발생했습니다: ${e.message}`);
+    if (isManual) alert(`이전 중 오류가 발생했습니다: ${e.message}`);
     return false;
   }
 }
 
-export async function migrateLocalDataToCloud(user) {
+export async function migrateLocalDataToCloud(user, isManual = false) {
   if (!user) return;
-  await exportAllLocalDataToCloud();
+  const migrationFlag = `migrated_${user.id}`;
+  if (localStorage.getItem(migrationFlag)) return;
+
+  const success = await exportAllLocalDataToCloud(isManual);
+  if (success) {
+    localStorage.setItem(migrationFlag, "true");
+  }
 }

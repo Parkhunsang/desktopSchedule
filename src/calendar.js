@@ -79,10 +79,12 @@ async function syncSupabaseEvents() {
         isExternal: true
       }));
 
-      const localIds = new Set(events.map(e => e.id));
+      const existingKeys = new Set(events.map(e => `${e.title}_${e.date}`));
       formattedEvents.forEach(fe => {
-        if (!localIds.has(fe.id)) {
+        const key = `${fe.title}_${fe.date}`;
+        if (!existingKeys.has(key)) {
           events.push(fe);
+          existingKeys.add(key);
         }
       });
 
