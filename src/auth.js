@@ -200,6 +200,7 @@ export async function exportAllLocalDataToCloud() {
         title: evt.title,
         date: evt.date,
         time: evt.time || "09:00",
+        end_time: evt.endTime || evt.end_time || "10:00",
         ...(userId ? { user_id: userId } : {})
       };
 

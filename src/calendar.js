@@ -45,6 +45,8 @@ export function initCalendar() {
   syncSupabaseEvents();
 }
 
+let calendarRealtimeChannel = null;
+
 async function syncSupabaseEvents() {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -89,8 +91,13 @@ async function syncSupabaseEvents() {
     }
 
     // 2. Subscribe to new event inserts in Realtime
-    supabase
-      .channel('supabase-calendar-changes')
+    if (calendarRealtimeChannel) {
+      try { supabase.removeChannel(calendarRealtimeChannel); } catch (e) {}
+      calendarRealtimeChannel = null;
+    }
+
+    calendarRealtimeChannel = supabase
+      .channel(`calendar-changes-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -119,8 +126,9 @@ async function syncSupabaseEvents() {
           renderCalendar();
           renderAgenda();
         }
-      )
-      .subscribe();
+      );
+
+    calendarRealtimeChannel.subscribe();
 
   } catch (err) {
     console.error("Failed to sync Supabase events:", err);
