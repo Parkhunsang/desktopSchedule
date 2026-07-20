@@ -56,7 +56,7 @@ export async function signInWithGoogle() {
   }
 
   try {
-    const redirectUrl = "https://desktopschedule.pages.dev";
+    const redirectUrl = "https://desktopschedule.pages.dev/";
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
