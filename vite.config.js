@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  // If local.env exists, manually parse and inject it if needed
+  // Load environment variables
   const env = loadEnv(mode, process.cwd(), '');
   
   // Custom check for local.env file
@@ -23,15 +23,17 @@ export default defineConfig(({ mode }) => {
     });
   }
 
-  // Find any KMA_SERVICE_KEY or VITE_KMA_SERVICE_KEY
   const kmaKey = process.env.VITE_KMA_SERVICE_KEY || process.env.KMA_SERVICE_KEY || env.VITE_KMA_SERVICE_KEY || env.KMA_SERVICE_KEY || '';
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || env.VITE_SUPABASE_URL || env.SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || '';
 
   return {
     base: './',
-    envPrefix: ['VITE_', 'KMA_'],
+    envPrefix: ['VITE_', 'KMA_', 'SUPABASE_'],
     define: {
-      'import.meta.env.VITE_KMA_SERVICE_KEY': JSON.stringify(kmaKey)
+      'import.meta.env.VITE_KMA_SERVICE_KEY': JSON.stringify(kmaKey),
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey)
     }
   };
 });
-
