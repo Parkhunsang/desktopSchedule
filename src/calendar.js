@@ -111,7 +111,22 @@ async function syncSupabaseEvents() {
           console.log('Realtime insert received from Supabase:', payload);
           const newSe = payload.new;
           
-          if (events.some(e => e.id === newSe.id)) return;
+          // Prevent duplicate addition when Realtime echoes back user's own insert
+          const isAlreadyExist = events.some(e => 
+            e.id === newSe.id || 
+            (e.title === newSe.title && e.date === newSe.date && e.time === (newSe.time || "19:00"))
+          );
+
+          if (isAlreadyExist) {
+            // Update local temporary event ID with Supabase UUID
+            events = events.map(e => {
+              if (e.title === newSe.title && e.date === newSe.date && e.time === (newSe.time || "19:00")) {
+                return { ...e, id: newSe.id };
+              }
+              return e;
+            });
+            return;
+          }
 
           const formatted = {
             id: newSe.id,
@@ -119,7 +134,7 @@ async function syncSupabaseEvents() {
             date: newSe.date,
             time: newSe.time || "19:00",
             endTime: newSe.end_time || "20:00",
-            color: newSe.color || "#8b5cf6",
+            color: resolveEventColor(newSe),
             desc: newSe.desc || "",
             isExternal: true
           };
