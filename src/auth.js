@@ -87,7 +87,6 @@ export async function signInWithGoogle() {
             currentUser = sessionData.user;
             renderAuthUI(currentUser);
             await migrateLocalDataToCloud(currentUser, false);
-            alert("🎉 데스크톱 위젯 로그인 성공!\n로컬 일정이 클라우드로 완벽하게 동기화되었습니다.");
             window.location.reload();
           }
         }

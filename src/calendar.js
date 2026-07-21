@@ -85,8 +85,15 @@ async function syncSupabaseEvents() {
         if (!existingKeys.has(key)) {
           events.push(fe);
           existingKeys.add(key);
+        } else {
+          // Sync real cloud DB ID to existing local event
+          const localEv = events.find(e => `${e.title}_${e.date}` === key);
+          if (localEv) {
+            localEv.id = fe.id;
+          }
         }
       });
+      saveEventsToStorage();
 
       renderCalendar();
       renderAgenda();
@@ -531,8 +538,9 @@ function saveEvent(e) {
   const supabase = getSupabaseClient();
   if (supabase) {
     const user = getCurrentUser();
+    const isLocalId = typeof id === 'string' && (id.startsWith('evt-') || id.startsWith('event-'));
+
     const dbEvent = {
-      id: targetId,
       title,
       date,
       time,
@@ -542,21 +550,32 @@ function saveEvent(e) {
       ...(user?.id ? { user_id: user.id } : {})
     };
 
-    if (id && !id.startsWith("event-")) {
-      supabase.from('scheduler_events').update(dbEvent).eq('id', id).then(({ error }) => {
+    if (id && !isLocalId) {
+      let query = supabase.from('scheduler_events').update(dbEvent).eq('id', id);
+      if (user?.id) query = query.eq('user_id', user.id);
+      query.then(({ error }) => {
         if (error) console.warn("[Supabase Event Update Warning]", error);
       });
     } else {
-      supabase.from('scheduler_events').insert([dbEvent]).then(({ error }) => {
-        if (error) console.warn("[Supabase Event Insert Warning]", error);
+      supabase.from('scheduler_events').insert([dbEvent]).select().then(({ data, error }) => {
+        if (error) {
+          console.warn("[Supabase Event Insert Warning]", error);
+        } else if (data && data[0]) {
+          const inserted = data[0];
+          const localEv = events.find(e => e.id === targetId || (e.title === title && e.date === date));
+          if (localEv) {
+            localEv.id = inserted.id;
+            saveEventsToStorage();
+          }
+        }
       });
     }
   }
 }
 
-function deleteEvent(id) {
-  const targetEvent = events.find(ev => ev.id === id);
-  events = events.filter(ev => ev.id !== id);
+async function deleteEvent(id) {
+  const targetEvent = events.find(ev => ev.id === id || String(ev.id) === String(id));
+  events = events.filter(ev => ev.id !== id && String(ev.id) !== String(id));
   saveEventsToStorage();
   closeEventModal();
   renderCalendar();
@@ -566,22 +585,29 @@ function deleteEvent(id) {
   const supabase = getSupabaseClient();
   if (supabase) {
     const user = getCurrentUser();
+    const isLocalId = typeof id === 'string' && (id.startsWith('evt-') || id.startsWith('event-'));
+
     let query = supabase.from('scheduler_events').delete();
     
-    if (id && !id.startsWith("event-")) {
+    if (id && !isLocalId) {
       query = query.eq('id', id);
     } else if (targetEvent) {
       query = query.eq('title', targetEvent.title).eq('date', targetEvent.date);
+    } else {
+      console.warn("[Supabase Event Delete Warning] No target event info available to delete from DB.");
+      return;
     }
 
     if (user?.id) {
       query = query.eq('user_id', user.id);
     }
 
-    query.then(({ error }) => {
-      if (error) console.warn("[Supabase Event Delete Warning]", error);
-      else console.log("[Supabase Event Deleted Successfully]", id);
-    });
+    const { error } = await query;
+    if (error) {
+      console.warn("[Supabase Event Delete Warning]", error);
+    } else {
+      console.log("[Supabase Event Deleted Successfully]", id);
+    }
   }
 }
 
