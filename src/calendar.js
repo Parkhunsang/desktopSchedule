@@ -22,9 +22,18 @@ export function initCalendar() {
   const addBtn = document.getElementById("add-event-btn");
   const closeModalBtn = document.getElementById("close-modal-btn");
   const modalOverlay = document.getElementById("event-modal");
+  const deleteBtn = document.getElementById("delete-event-btn");
 
   if (addBtn) addBtn.addEventListener("click", () => openEventModal());
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeEventModal);
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", () => {
+      const id = document.getElementById("event-id").value;
+      if (id) {
+        deleteEvent(id);
+      }
+    });
+  }
   if (modalOverlay) {
     modalOverlay.addEventListener("click", (e) => {
       if (e.target === modalOverlay) closeEventModal();
