@@ -29,8 +29,11 @@ export function initCalendar() {
   if (deleteBtn) {
     deleteBtn.addEventListener("click", () => {
       const id = document.getElementById("event-id").value;
+      console.log("[Delete Button Clicked] Target Event ID:", id);
       if (id) {
         deleteEvent(id);
+      } else {
+        console.warn("[Delete Button Clicked] Warning: event-id is empty.");
       }
     });
   }
@@ -583,7 +586,10 @@ function saveEvent(e) {
 }
 
 async function deleteEvent(id) {
+  console.log("[deleteEvent Initiated] Target Event ID:", id);
   const targetEvent = events.find(ev => ev.id === id || String(ev.id) === String(id));
+  console.log("[deleteEvent Target Found]", targetEvent);
+
   events = events.filter(ev => ev.id !== id && String(ev.id) !== String(id));
   saveEventsToStorage();
   closeEventModal();
@@ -599,8 +605,10 @@ async function deleteEvent(id) {
     let query = supabase.from('scheduler_events').delete();
     
     if (id && !isLocalId) {
+      console.log("[deleteEvent Supabase Query] Deleting by DB ID:", id);
       query = query.eq('id', id);
     } else if (targetEvent) {
+      console.log("[deleteEvent Supabase Query] Deleting by title and date:", targetEvent.title, targetEvent.date);
       query = query.eq('title', targetEvent.title).eq('date', targetEvent.date);
     } else {
       console.warn("[Supabase Event Delete Warning] No target event info available to delete from DB.");
@@ -608,14 +616,15 @@ async function deleteEvent(id) {
     }
 
     if (user?.id) {
+      console.log("[deleteEvent Supabase Query] Filtering by user_id:", user.id);
       query = query.eq('user_id', user.id);
     }
 
-    const { error } = await query;
+    const { data, error } = await query;
     if (error) {
-      console.warn("[Supabase Event Delete Warning]", error);
+      console.error("[Supabase Event Delete Failed]", error);
     } else {
-      console.log("[Supabase Event Deleted Successfully]", id);
+      console.log("[Supabase Event Deleted Successfully] Result:", data || "OK");
     }
   }
 }
