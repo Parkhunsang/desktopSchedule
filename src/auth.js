@@ -223,18 +223,15 @@ export async function exportAllLocalDataToCloud(isManual = true) {
       }
     }
 
-    if (isManual) {
-      if (successCount > 0) {
-        alert(`🎉 성공! 위젯 앱의 일정 ${successCount}개가 클라우드로 모두 이전되었습니다.\n이제 배포 사이트에서도 동일하게 보입니다!`);
-      } else {
-        alert("모든 일정이 이미 클라우드와 동일하게 이전되어 있습니다. (중복 없음)");
-      }
+    if (successCount > 0) {
+      console.log(`[Migration] Successfully exported ${successCount} local events to cloud.`);
+    } else {
+      console.log("[Migration] All local events are already synced to cloud.");
     }
 
     return true;
   } catch (e) {
     console.error("[Migration Error]", e);
-    if (isManual) alert(`이전 중 오류가 발생했습니다: ${e.message}`);
     return false;
   }
 }

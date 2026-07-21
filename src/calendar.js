@@ -615,11 +615,6 @@ async function deleteEvent(id) {
       return;
     }
 
-    if (user?.id) {
-      console.log("[deleteEvent Supabase Query] Filtering by user_id:", user.id);
-      query = query.eq('user_id', user.id);
-    }
-
     const { data, error } = await query;
     if (error) {
       console.error("[Supabase Event Delete Failed]", error);
