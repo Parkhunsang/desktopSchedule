@@ -1,17 +1,29 @@
 import { getSupabaseClient } from './supabaseClient.js';
 
 let currentUser = null;
+let authChangeCallback = null;
 
 export function getCurrentUser() {
   return currentUser;
 }
 
+function notifyAuthStateChange(user) {
+  currentUser = user;
+  renderAuthUI(user);
+  if (typeof authChangeCallback === 'function') {
+    authChangeCallback(user);
+  }
+}
+
 export async function initAuth(onUserChangeCallback) {
+  if (typeof onUserChangeCallback === 'function') {
+    authChangeCallback = onUserChangeCallback;
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     console.log("[Auth] Supabase is not configured yet.");
-    renderAuthUI(null);
-    if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
+    notifyAuthStateChange(null);
     return;
   }
 
@@ -19,31 +31,26 @@ export async function initAuth(onUserChangeCallback) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      currentUser = session.user;
-      renderAuthUI(currentUser);
-      await migrateLocalDataToCloud(currentUser, false);
-      if (typeof onUserChangeCallback === 'function') onUserChangeCallback(currentUser);
+      await migrateLocalDataToCloud(session.user, false);
+      notifyAuthStateChange(session.user);
     } else {
-      renderAuthUI(null);
-      if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
+      notifyAuthStateChange(null);
     }
   } catch (e) {
     console.warn("[Auth] Failed to get session:", e);
-    renderAuthUI(null);
-    if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
+    notifyAuthStateChange(null);
   }
 
   // Listen for auth state changes (login, logout)
   supabase.auth.onAuthStateChange(async (event, session) => {
     console.log(`[Auth State Change] Event: ${event}`);
-    currentUser = session?.user || null;
-    renderAuthUI(currentUser);
+    const user = session?.user || null;
 
-    if (event === 'SIGNED_IN' && currentUser) {
-      await migrateLocalDataToCloud(currentUser, false);
-      if (typeof onUserChangeCallback === 'function') onUserChangeCallback(currentUser);
-    } else if (event === 'SIGNED_OUT') {
-      if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
+    if (event === 'SIGNED_IN' && user) {
+      await migrateLocalDataToCloud(user, false);
+      notifyAuthStateChange(user);
+    } else if (event === 'SIGNED_OUT' || !user) {
+      notifyAuthStateChange(null);
     }
   });
 
@@ -87,9 +94,8 @@ export async function signInWithGoogle() {
           });
 
           if (!sessionErr && sessionData?.user) {
-            currentUser = sessionData.user;
-            renderAuthUI(currentUser);
-            await migrateLocalDataToCloud(currentUser, false);
+            await migrateLocalDataToCloud(sessionData.user, false);
+            notifyAuthStateChange(sessionData.user);
             window.location.reload();
           }
         }
@@ -105,19 +111,19 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   const supabase = getSupabaseClient();
-  if (!supabase) return;
-  
-  try {
-    await supabase.auth.signOut();
-    currentUser = null;
-    
-    // Clean up cached events of the logged-out user
-    localStorage.removeItem("desktop_scheduler_events");
-    
-    renderAuthUI(null);
-  } catch (err) {
-    console.error("[Auth Signout Error]", err);
+  if (supabase) {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("[Auth Signout Error]", err);
+    }
   }
+  
+  // Clean up cached events of the logged-out user
+  localStorage.removeItem("desktop_scheduler_events");
+  
+  // Instantly notify calendar and components to lock UI with overlays
+  notifyAuthStateChange(null);
 }
 
 function setupAuthEventListeners() {
