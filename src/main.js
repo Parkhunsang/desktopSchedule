@@ -1,7 +1,7 @@
 import './style.css';
 import { loadSettings, initSettingsDrawer } from './theme.js';
 import { startClockAndWeather } from './weather.js';
-import { initCalendar } from './calendar.js';
+import { initCalendar, updateCalendarState } from './calendar.js';
 import { initTasks } from './tasks.js';
 import { initPomodoro } from './pomodoro.js';
 import { initNotes } from './notes.js';
@@ -56,13 +56,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   initSettingsDrawer();
 
   // 4. Initialize Auth & System clock/weather
-  initAuth(() => {
-    initCalendar();
+  initCalendar();
+  initAuth((user) => {
+    updateCalendarState(user);
   });
   startClockAndWeather();
 
   // 5. Initialise widgets
-  initCalendar();
   initTasks();
   initPomodoro();
   initNotes();

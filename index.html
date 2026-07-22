@@ -95,6 +95,16 @@
         <section class="grid-column col-left">
           <!-- Calendar Widget -->
           <div class="widget-card glass-card" id="widget-calendar" draggable="true">
+            <!-- Auth Overlay -->
+            <div class="widget-overlay glass-overlay" id="calendar-auth-overlay">
+              <div class="overlay-content">
+                <i data-lucide="lock" class="overlay-icon"></i>
+                <p>로그인 후 일정을 확인하세요.</p>
+                <button class="glass-btn overlay-login-btn" onclick="window.signInWithGoogle && window.signInWithGoogle()">
+                  <span>Google 로그인</span>
+                </button>
+              </div>
+            </div>
             <div class="widget-header">
               <div class="widget-title">
                 <i data-lucide="calendar"></i>
@@ -118,6 +128,16 @@
 
           <!-- Agenda List Widget (Schedules of selected day) -->
           <div class="widget-card glass-card" id="widget-agenda" draggable="true">
+            <!-- Auth Overlay -->
+            <div class="widget-overlay glass-overlay" id="agenda-auth-overlay">
+              <div class="overlay-content">
+                <i data-lucide="lock" class="overlay-icon"></i>
+                <p>로그인 후 일정을 확인하세요.</p>
+                <button class="glass-btn overlay-login-btn" onclick="window.signInWithGoogle && window.signInWithGoogle()">
+                  <span>Google 로그인</span>
+                </button>
+              </div>
+            </div>
             <div class="widget-header">
               <div class="widget-title">
                 <i data-lucide="calendar-check"></i>

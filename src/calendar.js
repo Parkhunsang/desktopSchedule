@@ -8,8 +8,6 @@ let currentViewMonth = currentDate.getMonth(); // Month currently viewed (0-11)
 let currentViewYear = currentDate.getFullYear(); // Year currently viewed
 
 export function initCalendar() {
-  loadEvents();
-
   // Navigation Buttons
   const prevBtn = document.getElementById("prev-month-btn");
   const nextBtn = document.getElementById("next-month-btn");
@@ -48,13 +46,42 @@ export function initCalendar() {
   if (eventForm) {
     eventForm.addEventListener("submit", saveEvent);
   }
+}
 
-  // Initial Render
-  renderCalendar();
-  renderAgenda();
+export function updateCalendarState(user) {
+  console.log("[Calendar] Updating calendar state for user:", user?.email || "Guest");
+  const calendarOverlay = document.getElementById("calendar-auth-overlay");
+  const agendaOverlay = document.getElementById("agenda-auth-overlay");
 
-  // Sync cloud events via Supabase (async)
-  syncSupabaseEvents();
+  if (!user) {
+    // Guest State: clear events and show overlays
+    events = [];
+    if (calendarOverlay) calendarOverlay.classList.remove("hidden");
+    if (agendaOverlay) agendaOverlay.classList.remove("hidden");
+    
+    renderCalendar();
+    renderAgenda();
+
+    // Clean up Supabase realtime channel if any
+    const supabase = getSupabaseClient();
+    if (supabase && calendarRealtimeChannel) {
+      try {
+        supabase.removeChannel(calendarRealtimeChannel);
+      } catch (e) {
+        console.warn("Failed to remove channel on logout", e);
+      }
+      calendarRealtimeChannel = null;
+    }
+  } else {
+    // Authenticated State: hide overlays, load local cache, and sync cloud events
+    if (calendarOverlay) calendarOverlay.classList.add("hidden");
+    if (agendaOverlay) agendaOverlay.classList.add("hidden");
+
+    loadEvents();
+    renderCalendar();
+    renderAgenda();
+    syncSupabaseEvents();
+  }
 }
 
 let calendarRealtimeChannel = null;

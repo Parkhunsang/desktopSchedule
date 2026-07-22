@@ -11,6 +11,7 @@ export async function initAuth(onUserChangeCallback) {
   if (!supabase) {
     console.log("[Auth] Supabase is not configured yet.");
     renderAuthUI(null);
+    if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
     return;
   }
 
@@ -24,10 +25,12 @@ export async function initAuth(onUserChangeCallback) {
       if (typeof onUserChangeCallback === 'function') onUserChangeCallback(currentUser);
     } else {
       renderAuthUI(null);
+      if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
     }
   } catch (e) {
     console.warn("[Auth] Failed to get session:", e);
     renderAuthUI(null);
+    if (typeof onUserChangeCallback === 'function') onUserChangeCallback(null);
   }
 
   // Listen for auth state changes (login, logout)
