@@ -107,10 +107,17 @@ export async function signOut() {
   const supabase = getSupabaseClient();
   if (!supabase) return;
   
-  await supabase.auth.signOut();
-  currentUser = null;
-  renderAuthUI(null);
-  window.location.reload();
+  try {
+    await supabase.auth.signOut();
+    currentUser = null;
+    
+    // Clean up cached events of the logged-out user
+    localStorage.removeItem("desktop_scheduler_events");
+    
+    renderAuthUI(null);
+  } catch (err) {
+    console.error("[Auth Signout Error]", err);
+  }
 }
 
 function setupAuthEventListeners() {

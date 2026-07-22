@@ -203,42 +203,7 @@ function loadEvents() {
       events = [];
     }
   } else {
-    // Generate placeholder sample events
-    const todayStr = formatDateString(new Date());
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = formatDateString(tomorrow);
-
-    events = [
-      {
-        id: "sample-1",
-        title: "데스크탑 스케줄러 개발 시작",
-        date: todayStr,
-        time: "14:00",
-        endTime: "15:30",
-        color: "#3b82f6",
-        desc: "Vite + Vanilla JS로 멋진 투명 글래스 디자인 완성하기"
-      },
-      {
-        id: "sample-2",
-        title: "일일 스프린트 미팅",
-        date: todayStr,
-        time: "16:30",
-        endTime: "17:00",
-        color: "#f59e0b",
-        desc: "진행상황 요약 및 주간 플랜 조율"
-      },
-      {
-        id: "sample-3",
-        title: "운동 및 건강 관리",
-        date: tomorrowStr,
-        time: "09:00",
-        endTime: "10:30",
-        color: "#10b981",
-        desc: "헬스장 1시간 유산소 및 코어 트레이닝"
-      }
-    ];
-    saveEventsToStorage();
+    events = [];
   }
 }
 
