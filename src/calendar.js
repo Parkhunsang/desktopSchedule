@@ -96,10 +96,10 @@ async function syncSupabaseEvents() {
   const user = getCurrentUser();
 
   try {
-    // 1. Fetch existing cloud events (filtered by user_id if authenticated)
+    // 1. Fetch existing cloud events (user's events + external integrated events like Daily English where user_id is null)
     let query = supabase.from('scheduler_events').select('*');
     if (user && user.id) {
-      query = query.eq('user_id', user.id);
+      query = query.or(`user_id.eq.${user.id},user_id.is.null`);
     }
 
     const { data: supabaseEvents, error } = await query;
@@ -118,17 +118,21 @@ async function syncSupabaseEvents() {
         isExternal: true
       }));
 
+      const existingIds = new Set(events.map(e => String(e.id)));
       const existingKeys = new Set(events.map(e => `${e.title}_${e.date}`));
+
       formattedEvents.forEach(fe => {
         const key = `${fe.title}_${fe.date}`;
-        if (!existingKeys.has(key)) {
+        if (!existingIds.has(String(fe.id)) && !existingKeys.has(key)) {
           events.push(fe);
+          existingIds.add(String(fe.id));
           existingKeys.add(key);
         } else {
-          // Sync real cloud DB ID to existing local event
-          const localEv = events.find(e => `${e.title}_${e.date}` === key);
+          // Update existing local event with cloud info
+          const localEv = events.find(e => String(e.id) === String(fe.id) || `${e.title}_${e.date}` === key);
           if (localEv) {
             localEv.id = fe.id;
+            localEv.desc = fe.desc || localEv.desc;
           }
         }
       });
