@@ -1,0 +1,18 @@
+{
+  "name": "Workspace Desktop Scheduler",
+  "short_name": "스케줄러",
+  "description": "스마트 스케줄러 & 생산성 대시보드",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
