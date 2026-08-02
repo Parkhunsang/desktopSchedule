@@ -13,6 +13,7 @@ export function initLayout() {
   loadAndApplyLayout();
   bindDragEvents();
   updateGridLayout();
+  window.addEventListener("resize", updateGridLayout);
 }
 
 /**
@@ -188,6 +189,12 @@ export function updateGridLayout() {
   colLeft.style.display = leftActive ? "flex" : "none";
   colCenter.style.display = centerActive ? "flex" : "none";
   colRight.style.display = rightActive ? "flex" : "none";
+
+  // Mobile layout mode (< 768px): always single column stack
+  if (window.innerWidth <= 768) {
+    grid.style.gridTemplateColumns = "1fr";
+    return;
+  }
 
   // Re-calculate Grid template columns based on active columns combinations
   if (leftActive && centerActive && rightActive) {
